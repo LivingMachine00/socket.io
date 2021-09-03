@@ -1,0 +1,70 @@
+<!-- <!DOCTYPE html> -->
+<html>
+  <head>
+    <title>Sync Map</title>
+    <script src="https://cdn.socket.io/socket.io-3.0.1.min.js"></script></head>
+  </head>
+    
+  <body>
+       
+    <script>
+               
+      //fai la connessione al server 
+      const socket = io("http://localhost:3001");
+      //osservazione: gli eventi passati di tipo "message" sono persi
+      //perchè all'evento "connection" non si fa nessuna function
+      socket.on("connection");
+      
+      let map;
+
+			function initMap() {
+			  map = new google.maps.Map(document.getElementById("map"), {
+				center: { lat: 44.06, lng: 12.58 },
+				zoom: 8,
+			  });
+
+        google.maps.event.addListener(map, 'click', (event) => {
+          PiazzaMarker(map, event.latLng);
+        });
+
+        function PiazzaMarker(map, location) {
+          var marker = new google.maps.Marker({
+            position: location,
+            map: map
+          });
+           var infowindow = new google.maps.InfoWindow({
+            content: 'Latitudine: ' + location.lat() +
+             '<br>Longitudine: ' + location.lng()
+           });
+          infowindow.open(map,marker);
+          marker.setMap(map);
+          socket.emit("marker",marker.position);
+          console.log("**************"+marker.position);
+        }
+
+			}
+
+      //callback eventi "marker" sulla socket
+      socket.on("marker", data => {
+          var marker = new google.maps.Marker({
+            position: data,
+            map: map
+          });
+          var infowindow = new google.maps.InfoWindow({
+            content: 'Latitudine: ' + data.lat +
+             '<br>Longitudine: ' + data.lng
+           });
+          infowindow.open(map,marker);
+          marker.setMap(map);
+        });
+
+        </script> 
+  
+        <div id="map" style="height:100%"></div>
+
+        <script
+        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBw3Kjt5VOSoIHE0dcVBbrWJgjAd_jZirE&callback=initMap"
+        async>
+        </script>
+      </body>
+</html>
